@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type MenuItem = {
   label: string;
@@ -9,39 +10,84 @@ type MenuItem = {
   submenu?: MenuItem[];
 };
 
-const menuItems: MenuItem[] = [
-  {
-    label: "Home",
-    submenu: [
-      { label: "Home default", href: "/" },
-      { label: "Homepage 2", href: "/home-2" },
-      { label: "Homepage 3", href: "/home-3" },
-    ],
-  },
-  {
-    label: "Archive Layout",
-    submenu: [
-      { label: "Category list", href: "/category" },
-      { label: "Category grid", href: "/category-grid" },
-      { label: "Category big", href: "/category-big" },
-      { label: "Category metro", href: "/category-metro" },
-    ],
-  },
-  {
-    label: "Contact",
-    href: "/contact",
-  },
-];
+interface NavbarItem {
+  _id: string;
+  title: string;
+  category: string;
+  slug?: string;
+  idx: number;
+  items: any;
+}
+
+interface NavbarResponse {
+  success: boolean;
+  data: NavbarItem[];
+}
+
+const API_ENDPOINT = "/api/navbar?sort=idx";
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [openSubmenus, setOpenSubmenus] = useState<string[]>([]);
+  const [navbarItems, setNavbarItems] = useState<NavbarItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const pathname = usePathname();
+  const isArabicPage = pathname?.startsWith("/category/byqwlw-ayh") || pathname?.startsWith("/byqwlw-ayh/");
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
   const toggleSubmenu = (label: string) => {
     setOpenSubmenus((prev) => (prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]));
   };
+
+  useEffect(() => {
+    const fetchNavbar = async () => {
+      try {
+        const response = await fetch(API_ENDPOINT);
+
+        if (!response.ok) {
+          const errorStatus = response.status;
+          console.error("Failed to fetch navbar data. Status:", errorStatus);
+          throw new Error(`Failed to fetch navbar data (Status: ${errorStatus})`);
+        }
+
+        const result: NavbarResponse = await response.json();
+
+        if (result.success && result.data.length > 0) {
+          setNavbarItems(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching navbar:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNavbar();
+  }, []);
+
+  const menuItems: MenuItem[] = [
+    {
+      label: isArabicPage ? "الرئيسية" : "Home",
+      href: "/",
+    },
+    {
+      label: "بيقولوا إيه؟",
+      href: "/category/byqwlw-ayh",
+    },
+    {
+      label: isArabicPage ? "الأقسام" : "Sections",
+      submenu: navbarItems.map((item) => ({
+        label: item.title,
+        href: `/category/${item.title.toLowerCase().replace(/\s/g, "-")}`,
+      })),
+    },
+    {
+      label: isArabicPage ? "اتصل بنا" : "Contact Us",
+      href: "/contact",
+    },
+  ];
 
   return (
     <div className="mobile_menu d-lg-none">
@@ -80,11 +126,15 @@ export default function MobileMenu() {
                     </a>
                     {openSubmenus.includes(item.label) && (
                       <ul className="sub-menu text-muted font-small">
-                        {item.submenu.map((sub) => (
-                          <li key={sub.label} className="py-1">
-                            <Link href={sub.href ?? "#"}>{sub.label}</Link>
-                          </li>
-                        ))}
+                        {isLoading && item.label === (isArabicPage ? "الأقسام" : "Sections") ? (
+                          <li className="py-1">Loading...</li>
+                        ) : (
+                          item.submenu.map((sub) => (
+                            <li key={sub.label} className="py-1">
+                              <Link href={sub.href ?? "#"}>{sub.label}</Link>
+                            </li>
+                          ))
+                        )}
                       </ul>
                     )}
                   </>
