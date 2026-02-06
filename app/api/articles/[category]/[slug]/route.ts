@@ -11,7 +11,7 @@ const CACHE_REVALIDATE = 1800; // 30 minutes
 // Fetch single article from backend API
 const getArticleData = async (categorySlug: string, articleSlug: string) => {
     try {
-        // Use the new backend endpoint that fetches by category slug and post slug
+            
         const url = `${BACKEND_URL}/api/post/${categorySlug}/${articleSlug}`;
 
         const response = await fetch(url, {

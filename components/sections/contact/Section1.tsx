@@ -9,7 +9,7 @@ export default function Section1({
   },
   companyInfo = {
     name: "They Magazine",
-    description: "Whether you are looking to elevate your brand’s presence, inquire about a feature, or explore strategic PR opportunities within the Egyptian market and beyond, we are here to listen. At Merhan They Magazine, we believe every story deserves the right stage.",
+    description: "a digital publication dedicated to publishing curated, accurate news with clarity and credibility. Our editorial approach focuses on context, depth, and delivering information that truly matters.",
   },
   contactInfo = {
     address: "Cairo, Egypt",
