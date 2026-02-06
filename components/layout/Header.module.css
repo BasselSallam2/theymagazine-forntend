@@ -1,0 +1,85 @@
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--bs-white);
+    /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
+}
+
+.headerRow {
+    position: relative;
+    min-height: 80px;
+}
+
+.logoWrap {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.navbar {
+    padding: 1rem 0;
+}
+
+.navbarBrand {
+    font-family: var(--eb-garamond);
+    font-weight: 600;
+    font-size: 1.5rem;
+    color: var(--bs-primary);
+    display: flex;
+    align-items: center;
+}
+
+.navLink {
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.navLink:hover {
+    color: var(--bs-primary);
+}
+
+.searchForm {
+    position: relative;
+}
+
+.searchInput {
+    border-radius: 25px;
+    border: 1px solid var(--bs-gray-300);
+    padding: 0.5rem 1rem;
+    width: 100%;
+    max-width: 300px;
+}
+
+.searchButton {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--bs-gray-600);
+}
+
+.mobileMenuButton {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--bs-gray-700);
+}
+
+@media (max-width: 768px) {
+    .mobileMenuButton {
+        display: block;
+    }
+
+    .navbarNav {
+        display: none;
+    }
+}

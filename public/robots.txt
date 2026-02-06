@@ -1,0 +1,27 @@
+# Robots.txt for NewsBoard
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /private/
+Disallow: /temp/
+
+# Allow important pages
+Allow: /sitemap.xml
+Allow: /feed.xml
+Allow: /rss.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://newsboard.com/sitemap.xml
+
+# Additional sitemaps
+Sitemap: https://newsboard.com/sitemap-articles.xml
+Sitemap: https://newsboard.com/sitemap-categories.xml
+Sitemap: https://newsboard.com/sitemap-authors.xml 
