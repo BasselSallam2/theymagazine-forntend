@@ -763,13 +763,14 @@ header .search-icon .ti-close,
 .main-header .main-nav ul ul.sub-menu {
     text-align: left;
     position: absolute;
-    min-width: 140px;
+    min-width: fit-content;
+    max-width: 250px;
     background: #000;
     left: 0;
     top: 130%;
     visibility: hidden;
     opacity: 0;
-    padding: 17px 0;
+    padding-block: 10px;
     -webkit-transition: all 0.2s ease-out 0s;
     -moz-transition: all 0.2s ease-out 0s;
     -ms-transition: all 0.2s ease-out 0s;
@@ -792,7 +793,7 @@ header .search-icon .ti-close,
 
 .main-header .main-nav ul ul.sub-menu {
     display: block;
-    padding-left: 15px;
+    padding-inline: 10px;
 }
 
 .main-header .main-nav ul ul.sub-menu > li > a {
