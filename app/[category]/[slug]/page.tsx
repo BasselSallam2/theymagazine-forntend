@@ -5,8 +5,8 @@ import StructuredData from "@/components/StructuredData";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-// Backend API URL
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+
+
 
 // Fetch article data from API
 async function getArticle(category: string, slug: string) {

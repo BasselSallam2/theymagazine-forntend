@@ -107,35 +107,35 @@ export default function Header({ variant = "default", showSearch = true, showSoc
                     </ul>
                 </div>
             </div> */}
-            <header className={`${styles.header} main-header header-style-1 font-heading header-sticky ${scroll ? "sticky-bar" : ""}`}>
+            <header className={`${styles.header} main-header header-style-1 font-heading header-sticky ${scroll ? "sticky-bar" : ""}`}
+            
+            >
                 <MobileMenu />
-                <div className={`container ${styles.headerRow}`}>
+                <div className={`container ${styles.headerRow}`} >
                     <div className="main-nav d-none d-lg-block float-start">
                         <nav className="text-uppercase">
                             <MainMenu />
                         </nav>
                     </div>
                     <div className={`${styles.navbarBrand} ${styles.logoWrap} logo d-md-inline d-none`} style={{
-                        padding: '10px 20px',
-                        height: '100%'
+                        paddingInline: '5px',
                     }}>
-                        <Link href="/" style={{
+                        <Link  href="/" style={{
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            height: '100%'
                         }}>
                             <Image
                                 src={logoSrc}
                                 alt="they say"
-                                width={300}
-                                height={86}
+                                width={250}
+                                height={72}
                                 style={{
                                     objectFit: 'contain',
                                     width: '80%',
                                     height: 'auto',
-                                    maxWidth: '300px',
-                                    maxHeight: '86px'
+                                    maxWidth: '250px',
+                                    maxHeight: '72px'
                                 }}
                                 priority
                             />

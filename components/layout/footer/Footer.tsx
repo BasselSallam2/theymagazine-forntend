@@ -126,9 +126,18 @@ export default function Footer({
                             {/* العمود الأول: معلومات التواصل */}
                             <div className="col-lg-3 col-md-6 mb-lg-0 mb-md-4 mb-sm-4">
                                 <div className="sidebar-widget widget-latest-posts pr-50">
-                                    <h4 className="widget-header text-uppercase font-weight-bold color-black">
+                                    <h4 className="widget-header text-uppercase font-weight-bold color-black"
+                                    
+                                    >
                                         {/* change this "they" to logo.png in assets/images/logo.png */}
-                                        <span><Image src="/assets/imgs/logo.png" alt="Logo" width={100} height={100} style={{ width: '100%', height: '100%' }} /></span>
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            maxWidth:'150px'
+                                        }}>
+
+                                            <Image src="/assets/imgs/logo.png" alt="Logo" width={450} height={64} style={{ width: '100%', height: '80%' }} />
+                                        </div>
                                     </h4>
                                     <div className="textwidget">
                                         {/* ⬅️ subtitle1 */}
