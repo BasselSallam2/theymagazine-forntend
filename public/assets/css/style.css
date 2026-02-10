@@ -835,9 +835,19 @@ header .search-icon .ti-close,
 }
 
 .logo-mobile {
-    max-width: 45px;
+    max-width: 200px;
+    min-width: 150px;
+    width: 165px;
     z-index: 500;
     position: relative;
+}
+
+.main-header .logo-mobile img {
+    width: 100% !important;
+    min-width: 130px !important;
+    height: auto !important;
+    min-height: 40px !important;
+    object-fit: contain;
 }
 
 /* Mega menu */

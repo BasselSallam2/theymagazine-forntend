@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { unstable_cache } from "next/cache";
 
-// Backend API URL
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_SERVER;
-
-// Cache configuration
-const CACHE_TAG = "article";
-const CACHE_REVALIDATE = 1800; // 30 minutes
+// Backend API URL (must include /api so path becomes /api/post/...)
+const BACKEND_URL =
+    process.env.NEXT_PUBLIC_API_SERVER || "http://localhost:8080/api";
 
 // Fetch single article from backend API
 const getArticleData = async (categorySlug: string, articleSlug: string) => {
@@ -104,19 +100,6 @@ const getArticleData = async (categorySlug: string, articleSlug: string) => {
     }
 };
 
-// Cached data fetching function
-const getCachedArticle = unstable_cache(
-    async (categorySlug: string, articleSlug: string) => {
-        const article = await getArticleData(categorySlug, articleSlug);
-        return article;
-    },
-    [CACHE_TAG],
-    {
-        revalidate: CACHE_REVALIDATE,
-        tags: [CACHE_TAG],
-    },
-);
-
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ category: string; slug: string }> },
@@ -124,8 +107,8 @@ export async function GET(
     try {
         const { category, slug } = await params;
 
-        // Get cached article
-        const article = await getCachedArticle(category, slug);
+        // Fetch fresh from backend so edits show immediately
+        const article = await getArticleData(category, slug);
 
         if (!article) {
             return NextResponse.json(
@@ -141,7 +124,7 @@ export async function GET(
 
         return NextResponse.json(response, {
             headers: {
-                "Cache-Control": `public, s-maxage=${CACHE_REVALIDATE}, stale-while-revalidate=${CACHE_REVALIDATE * 2}`,
+                "Cache-Control": "no-store, must-revalidate",
             },
         });
     } catch (error) {

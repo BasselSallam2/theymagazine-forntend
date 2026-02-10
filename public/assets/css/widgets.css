@@ -256,6 +256,17 @@ ul.list-post li + li {
     padding-top: 20px;
 }
 
+/* Keep the meta line aligned across slides */
+.home-featured-1 .post-content-overlay .post-title {
+    line-height: 1.2;
+    max-height: calc(1.2em * 3);
+    min-height: calc(1.2em * 3);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
 .img-hover-slide {
     position: relative;
     min-height: 550px;

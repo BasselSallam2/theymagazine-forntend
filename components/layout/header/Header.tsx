@@ -141,27 +141,29 @@ export default function Header({ variant = "default", showSearch = true, showSoc
                             />
                         </Link>
                     </div>
-                    <div className={`${styles.navbarBrand} ${styles.logoWrap} logo logo-mobile d-inline d-md-none`} style={{
-                        padding: '8px 16px',
+                    <div className={`${styles.navbarBrand} ${styles.logoWrap} ${styles.logoMobileWrap} logo logo-mobile d-inline d-md-none`} style={{
+                        padding: '8px 12px',
                     }}>
                         <Link href="/" style={{
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            minHeight: '40px',
+                            width: '100%',
                         }}>
                             <Image
                                 src={logoSrc}
                                 alt="they say"
-                                width={200}
-                                height={58}
+                                width={165}
+                                height={48}
                                 style={{
                                     objectFit: 'contain',
-                                    width: '80%',
+                                    width: '100%',
                                     height: 'auto',
-                                    maxWidth: '200px',
-                                    maxHeight: '58px'
+                                    minHeight: '40px',
                                 }}
                                 priority
+                                sizes="(max-width: 768px) 165px, 200px"
                             />
                         </Link>
                     </div>

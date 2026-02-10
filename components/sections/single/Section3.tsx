@@ -140,7 +140,7 @@ export default function Section3({
                 )}
                 <div className="entry-left-col">
                 </div>
-                <div className="entry-main-content dropcap ">
+                <div className="entry-main-content">
                     {article.content ? (
                         <div dangerouslySetInnerHTML={{ __html: article.content }} />
                     ) : (

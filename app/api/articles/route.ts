@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 
-// Backend API URL
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_SERVER;
+// Backend API URL (must include /api so path becomes /api/post?...)
+const BACKEND_URL =
+    process.env.NEXT_PUBLIC_API_SERVER || "http://localhost:8080/api";
 
 // Cache configuration
 const CACHE_TAG = "articles";
@@ -135,10 +136,8 @@ const getArticlesData = async (
             };
         });
 
-        // For related articles, filter out YouTube content and select random 2
+        // For related articles, filter out YouTube and current article, then select random
         if (params?.related === "true") {
-            console.log("Total articles before filtering:", articles.length);
-
             // Filter out articles that contain YouTube links in content
             articles = articles.filter(
                 (article: any) =>
@@ -146,18 +145,19 @@ const getArticlesData = async (
                     !/youtube\.com|youtu\.be/i.test(article.content),
             );
 
-            console.log("Articles after YouTube filtering:", articles.length);
+            // Exclude current article so it doesn't appear in related
+            if (params?.excludeSlug) {
+                articles = articles.filter(
+                    (article: any) => article.slug !== params.excludeSlug,
+                );
+            }
 
-            // Randomly select 2 articles
-            if (articles.length >= 2) {
+            // Randomly select up to 3 for "You might be interested" / "Related posts"
+            const count = Math.min(3, articles.length);
+            if (count > 0) {
                 const shuffled = [...articles].sort(() => 0.5 - Math.random());
-                articles = shuffled.slice(0, 2);
-            } else if (articles.length === 1) {
-                // If only 1 article, return it
-                articles = articles.slice(0, 1);
+                articles = shuffled.slice(0, count);
             } else {
-                // If no articles without YouTube, return empty array
-                console.log("No articles without YouTube content found");
                 articles = [];
             }
         }
@@ -191,15 +191,17 @@ export async function GET(request: NextRequest) {
         const category = searchParams.get("category");
         const author = searchParams.get("author");
         const related = searchParams.get("related");
+        const excludeSlug = searchParams.get("excludeSlug"); // e.g. "/events/current-post-slug"
 
         // For related articles, fetch with special parameters
         let articles: Article[];
         if (related === "true") {
-            const params = {
-                limit: "10000",
+            const params: Record<string, string> = {
+                limit: "100",
                 populate: JSON.stringify(["author", "category"]),
                 related: "true",
             };
+            if (excludeSlug) params.excludeSlug = excludeSlug;
             articles = await getArticlesData(params);
         } else {
             // Get cached articles for regular requests

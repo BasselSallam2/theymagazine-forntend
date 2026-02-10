@@ -49,10 +49,14 @@ async function getArticle(category: string, slug: string) {
   }
 }
 
-// Fetch related articles
-async function getRelatedArticles() {
+// Fetch related articles (optionally exclude current article by its full path slug)
+async function getRelatedArticles(excludeSlug?: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles?related=true`, {
+    const url = new URL(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles`);
+    url.searchParams.set('related', 'true');
+    if (excludeSlug) url.searchParams.set('excludeSlug', excludeSlug);
+
+    const response = await fetch(url.toString(), {
       cache: 'no-store',
     });
 
@@ -138,8 +142,8 @@ export default async function ArticlePage({
         }))
       : [];
 
-    // Fetch related articles
-    const relatedArticles = await getRelatedArticles();
+    // Fetch related articles (exclude current article)
+    const relatedArticles = await getRelatedArticles(article.slug);
 
     return (
       <>
