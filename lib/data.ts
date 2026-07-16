@@ -98,20 +98,30 @@ export const getArticleBySlug = (slug: string) => {
     );
 };
 
-export const getArticlesByCategory = async (categorySlug: string) => {
+export const getArticlesByCategory = async (
+    categorySlug: string,
+    options: { page?: number; limit?: number } = {},
+) => {
     try {
+        const page = options.page && options.page > 0 ? options.page : 1;
+        const limit = options.limit && options.limit > 0 ? options.limit : 12;
+        const params = new URLSearchParams({
+            page: String(page),
+            limit: String(limit),
+        });
         const response = await fetch(
-            `${BACK_END}/post/category/${categorySlug}`,
+            `${BACK_END}/post/category/${categorySlug}?${params.toString()}`,
+            { cache: "no-store" },
         );
         if (!response.ok) {
             console.error("getArticlesByCategory failed:", response.status);
-            return { data: [], meta: {} };
+            return { data: [], pagination: null };
         }
         const result = await response.json();
         return result;
     } catch (error) {
         console.error("getArticlesByCategory error:", error);
-        return { data: [], meta: {} };
+        return { data: [], pagination: null };
     }
 };
 
@@ -223,10 +233,13 @@ export async function getHomePageData() {
     };
 }
 
-export async function getCategoryPageData(categorySlug: string) {
+export async function getCategoryPageData(
+    categorySlug: string,
+    options: { page?: number; limit?: number } = {},
+) {
     try {
         const [articlesResult, categoriesResult] = await Promise.all([
-            getArticlesByCategory(categorySlug),
+            getArticlesByCategory(categorySlug, options),
             getCategories(),
         ]);
 
@@ -321,10 +334,29 @@ export async function getCategoryPageData(categorySlug: string) {
             (cat: Category) => cat.slug === categorySlug,
         );
 
+        const rawPagination =
+            articlesResult?.pagination ||
+            articlesResult?.paginationResult ||
+            articlesResult?.meta ||
+            null;
+
+        const meta = rawPagination
+            ? {
+                  currentPage: rawPagination.page || options.page || 1,
+                  totalPages: rawPagination.pages || 1,
+                  total: rawPagination.count || transformedArticles.length,
+                  limit: rawPagination.limit || options.limit || 12,
+                  hasPrev: Boolean(rawPagination.hasPrevPage),
+                  hasNext: Boolean(rawPagination.hasNextPage),
+                  prevPage: rawPagination.prevPage ?? null,
+                  nextPage: rawPagination.nextPage ?? null,
+              }
+            : null;
+
         return {
             articles: transformedArticles,
             category: category,
-            meta: articlesResult?.paginationResult || articlesResult?.meta,
+            meta,
         };
     } catch (error) {
         console.error("Error fetching category page data:", error);

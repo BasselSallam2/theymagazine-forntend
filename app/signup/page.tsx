@@ -1,28 +1,29 @@
 import SignupForm from "@/components/sections/auth/SignupForm";
 import { Metadata } from "next";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Sign Up - Create Your NewsBoard Account",
-  description: "Join NewsBoard and create your free account to access personalized news, save articles, and stay updated with the latest breaking stories and analysis.",
-  keywords: ["sign up", "register", "create account", "join newsboard", "free account", "personalized news"],
+  title: `Sign Up - Create Your ${SITE_NAME} Account`,
+  description: `Join ${SITE_NAME} and create your free account to access personalized news, save articles, and stay updated with the latest breaking stories and analysis.`,
+  keywords: ["sign up", "register", "create account", SITE_NAME, "free account", "personalized news"],
   alternates: {
-    canonical: '/signup',
+    canonical: "/signup",
   },
   openGraph: {
-    title: "Sign Up - Create Your NewsBoard Account",
-    description: "Join NewsBoard and create your free account to access personalized news and stay updated.",
-    url: 'https://newsboard.com/signup',
-    siteName: 'NewsBoard',
-    type: 'website',
+    title: `Sign Up - Create Your ${SITE_NAME} Account`,
+    description: `Join ${SITE_NAME} and create your free account to access personalized news and stay updated.`,
+    url: `${SITE_URL}/signup`,
+    siteName: SITE_NAME,
+    type: "website",
   },
   twitter: {
-    card: 'summary',
-    title: "Sign Up - Create Your NewsBoard Account",
-    description: "Join NewsBoard and create your free account to access personalized news and stay updated.",
+    card: "summary",
+    title: `Sign Up - Create Your ${SITE_NAME} Account`,
+    description: `Join ${SITE_NAME} and create your free account to access personalized news and stay updated.`,
   },
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
   },
 };
 

@@ -1,24 +1,25 @@
 import LoginForm from "@/components/sections/auth/LoginForm";
 import { Metadata } from "next";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Login - Access Your NewsBoard Account",
-  description: "Sign in to your NewsBoard account to access personalized news, save articles, and manage your preferences. Secure login for registered users.",
-  keywords: ["login", "sign in", "account", "user login", "secure login", "newsboard account"],
+  title: `Login - Access Your ${SITE_NAME} Account`,
+  description: `Sign in to your ${SITE_NAME} account to access personalized news, save articles, and manage your preferences. Secure login for registered users.`,
+  keywords: ["login", "sign in", "account", "user login", "secure login", SITE_NAME],
   alternates: {
-    canonical: '/login',
+    canonical: "/login",
   },
   openGraph: {
-    title: "Login - Access Your NewsBoard Account",
-    description: "Sign in to your NewsBoard account to access personalized news and manage your preferences.",
-    url: 'https://newsboard.com/login',
-    siteName: 'NewsBoard',
-    type: 'website',
+    title: `Login - Access Your ${SITE_NAME} Account`,
+    description: `Sign in to your ${SITE_NAME} account to access personalized news and manage your preferences.`,
+    url: `${SITE_URL}/login`,
+    siteName: SITE_NAME,
+    type: "website",
   },
   twitter: {
-    card: 'summary',
-    title: "Login - Access Your NewsBoard Account",
-    description: "Sign in to your NewsBoard account to access personalized news and manage your preferences.",
+    card: "summary",
+    title: `Login - Access Your ${SITE_NAME} Account`,
+    description: `Sign in to your ${SITE_NAME} account to access personalized news and manage your preferences.`,
   },
   robots: {
     index: false,

@@ -14,6 +14,8 @@ interface StructuredDataProps {
     modifiedTime?: string;
     author?: any;
     category?: any;
+    tags?: any;
+    slug?: string;
 }
 
 export default function StructuredData(props: StructuredDataProps) {

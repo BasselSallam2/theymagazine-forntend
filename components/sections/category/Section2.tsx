@@ -12,6 +12,16 @@ interface CategoryArticlesProps extends Omit<ArticleListSectionProps, "articles"
   category?: Category;
   title?: string;
   showPagination?: boolean;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    total?: number;
+    limit?: number;
+    hasPrev: boolean;
+    hasNext: boolean;
+    prevPage?: number | null;
+    nextPage?: number | null;
+  } | null;
   showLoadMore?: boolean;
   itemsPerPage?: number;
   showCategories?: boolean;
@@ -120,8 +130,101 @@ const VideoModal = ({ isOpen, onClose, videoUrl, title }: VideoModalProps) => {
   );
 };
 
+function categoryPageHref(slug: string, page: number) {
+  if (page <= 1) return `/category/${slug}`;
+  return `/category/${slug}?page=${page}`;
+}
+
+function CategoryPagination({
+  slug,
+  pagination,
+  ariaLabel,
+}: {
+  slug: string;
+  pagination: NonNullable<CategoryArticlesProps["pagination"]>;
+  ariaLabel: string;
+}) {
+  const { currentPage, totalPages, hasPrev, hasNext, prevPage, nextPage } =
+    pagination;
+
+  if (totalPages <= 1) return null;
+
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  return (
+    <div className="d-flex justify-content-center mt-4">
+      <nav aria-label={ariaLabel}>
+        <ul className="pagination">
+          <li className={`page-item ${!hasPrev ? "disabled" : ""}`}>
+            {hasPrev && prevPage ? (
+              <Link
+                className="page-link"
+                href={categoryPageHref(slug, prevPage)}
+                aria-label="Previous"
+                scroll
+              >
+                <span aria-hidden="true">&laquo;</span>
+              </Link>
+            ) : (
+              <span className="page-link" aria-hidden="true">
+                &laquo;
+              </span>
+            )}
+          </li>
+          {pages.map((page) => (
+            <li
+              key={page}
+              className={`page-item ${page === currentPage ? "active" : ""}`}
+            >
+              {page === currentPage ? (
+                <span className="page-link" aria-current="page">
+                  {page}
+                </span>
+              ) : (
+                <Link
+                  className="page-link"
+                  href={categoryPageHref(slug, page)}
+                  scroll
+                >
+                  {page}
+                </Link>
+              )}
+            </li>
+          ))}
+          <li className={`page-item ${!hasNext ? "disabled" : ""}`}>
+            {hasNext && nextPage ? (
+              <Link
+                className="page-link"
+                href={categoryPageHref(slug, nextPage)}
+                aria-label="Next"
+                scroll
+              >
+                <span aria-hidden="true">&raquo;</span>
+              </Link>
+            ) : (
+              <span className="page-link" aria-hidden="true">
+                &raquo;
+              </span>
+            )}
+          </li>
+        </ul>
+      </nav>
+    </div>
+  );
+}
+
 // Reels Grid Component for category pages
-const ReelsGrid = ({ articles, showPagination }: { articles: Article[], showPagination: boolean }) => {
+const ReelsGrid = ({
+  articles,
+  showPagination,
+  pagination,
+  categorySlug,
+}: {
+  articles: Article[];
+  showPagination: boolean;
+  pagination?: CategoryArticlesProps["pagination"];
+  categorySlug: string;
+}) => {
   const [selectedVideo, setSelectedVideo] = useState<{url: string; title: string} | null>(null);
 
   const handleVideoClick = (videoUrl: string, title: string) => {
@@ -231,29 +334,12 @@ const ReelsGrid = ({ articles, showPagination }: { articles: Article[], showPagi
       </div>
 
       {/* Pagination */}
-      {showPagination && articles.length > 12 && (
-        <div className="d-flex justify-content-center mt-4">
-          <nav aria-label="Reels pagination">
-            <ul className="pagination">
-              <li className="page-item">
-                <a className="page-link" href="#" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                </a>
-              </li>
-              <li className="page-item active">
-                <a className="page-link" href="#">1</a>
-              </li>
-              <li className="page-item">
-                <a className="page-link" href="#">2</a>
-              </li>
-              <li className="page-item">
-                <a className="page-link" href="#" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
+      {showPagination && pagination && (
+        <CategoryPagination
+          slug={categorySlug}
+          pagination={pagination}
+          ariaLabel="Reels pagination"
+        />
       )}
 
       <VideoModal
@@ -266,7 +352,7 @@ const ReelsGrid = ({ articles, showPagination }: { articles: Article[], showPagi
   );
 };
 
-export default function Section2({ articles = [], category, title = "Latest Articles", variant = "grid", columns = 3, showPagination = true, showLoadMore = false, itemsPerPage = 12, showCategories = true, showAuthor = true, showDate = true, showExcerpt = true, showReadTime = true, showViews = true, showLikes = true, className, isArabic = false }: CategoryArticlesProps = {}) {
+export default function Section2({ articles = [], category, title = "Latest Articles", variant = "grid", columns = 3, showPagination = true, pagination = null, showLoadMore = false, itemsPerPage = 12, showCategories = true, showAuthor = true, showDate = true, showExcerpt = true, showReadTime = true, showViews = true, showLikes = true, className, isArabic = false }: CategoryArticlesProps = {}) {
   const [recentArticles, setRecentArticles] = useState<Article[]>([]);
   const isReels = category?.slug === 'reels';
 
@@ -318,7 +404,12 @@ export default function Section2({ articles = [], category, title = "Latest Arti
           <span className="line-dots mb-10" />
           <span className="pl-15 pr-15 bg-white font-family-normal">{title}</span>
         </h3>
-        <ReelsGrid articles={articles} showPagination={showPagination} />
+        <ReelsGrid
+          articles={articles}
+          showPagination={showPagination}
+          pagination={pagination}
+          categorySlug={category?.slug || "reels"}
+        />
       </section>
     );
   }
@@ -566,32 +657,12 @@ export default function Section2({ articles = [], category, title = "Latest Arti
         )}
 
         {/* Pagination */}
-        {showPagination && articles.length > 6 && (
-          <div className="d-flex justify-content-center mt-4">
-            <nav aria-label="Category pagination">
-              <ul className="pagination">
-                <li className="page-item">
-                  <a className="page-link" href="#" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                  </a>
-                </li>
-                <li className="page-item active">
-                  <a className="page-link" href="#">1</a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#">2</a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#">3</a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                  </a>
-                </li>
-              </ul>
-            </nav>
-          </div>
+        {showPagination && pagination && category?.slug && (
+          <CategoryPagination
+            slug={category.slug}
+            pagination={pagination}
+            ariaLabel="Category pagination"
+          />
         )}
       </section>
     </>

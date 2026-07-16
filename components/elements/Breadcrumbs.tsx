@@ -15,7 +15,7 @@ export default function Breadcrumbs({ items, separator = '/', showHome = true, c
             '@type': 'ListItem',
             'position': index + 1,
             'name': item.label,
-            'item': item.href ? `https://newsboard.com${item.href}` : undefined,
+            'item': item.href ? `${process.env.NEXT_PUBLIC_SITE_URL || 'https://theymagazine.blog'}${item.href}` : undefined,
         })),
     }
 

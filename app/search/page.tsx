@@ -2,19 +2,20 @@ import Section1 from "@/components/sections/search/Section1";
 import Section2 from "@/components/sections/search/Section2";
 import { Metadata } from "next";
 import { Article } from "@/types";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Search Articles - Find News and Stories",
   description: "Search through our comprehensive collection of news articles, stories, and analysis. Find the latest breaking news, in-depth reports, and insightful commentary on topics that matter to you.",
-  keywords: ["search", "articles", "news", "stories", "find", "search news", "breaking news", "analysis"],
+  keywords: ["search", "articles", "news", "stories", "find", "search news", "breaking news", "analysis", SITE_NAME],
   alternates: {
     canonical: "/search",
   },
   openGraph: {
     title: "Search Articles - Find News and Stories",
     description: "Search through our comprehensive collection of news articles, stories, and analysis.",
-    url: "https://newsboard.com/search",
-    siteName: "NewsBoard",
+    url: `${SITE_URL}/search`,
+    siteName: SITE_NAME,
     type: "website",
   },
   twitter: {

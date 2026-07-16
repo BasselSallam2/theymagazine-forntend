@@ -93,6 +93,7 @@ const getArticleData = async (categorySlug: string, articleSlug: string) => {
             views: article.views || 0,
             isFeatured: article.isFeatured || false,
             allowComments: article.allowComments || false,
+            seo: article.seo || null,
         };
     } catch (error) {
         console.error("Error fetching article from backend:", error);

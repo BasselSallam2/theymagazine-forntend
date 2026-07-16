@@ -7,20 +7,21 @@ import Section6 from "@/components/sections/home/Section6";
 import Section7 from "@/components/sections/home/Section7";
 import SuspenseWrapper from "@/components/elements/SuspenseWrapper";
 import { Metadata } from "next";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Home page metadata
 export const metadata: Metadata = {
-  title: "They Magazine",
+  title: SITE_NAME,
   description: "Get the latest breaking news, in-depth analysis, and comprehensive coverage of current events. Stay informed with our trusted journalism and insightful reporting on politics, technology, business, sports, and entertainment.",
-  keywords: ["breaking news", "latest news", "current events", "politics", "technology", "business", "sports", "entertainment", "analysis", "journalism"],
+  keywords: [SITE_NAME, "breaking news", "latest news", "current events", "politics", "technology", "business", "sports", "entertainment", "analysis", "journalism"],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "They Magazine",
+    title: SITE_NAME,
     description: "Get the latest breaking news, in-depth analysis, and comprehensive coverage of current events. Stay informed with our trusted journalism.",
-    url: "https://newsboard.com",
-    siteName: "NewsBoard",
+    url: SITE_URL,
+    siteName: SITE_NAME,
     images: [
       {
         url: "/assets/imgs/news/news-1.jpg",
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "They Magazine",
+    title: SITE_NAME,
     description: "Get the latest breaking news, in-depth analysis, and comprehensive coverage of current events.",
     images: ["/assets/imgs/news/news-1.jpg"],
   },

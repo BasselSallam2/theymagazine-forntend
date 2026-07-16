@@ -1,24 +1,25 @@
 import Section1 from "@/components/sections/contact/Section1";
 import { Metadata } from "next";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Contact Us - Get in Touch with NewsBoard",
-  description: "Contact NewsBoard for inquiries, feedback, or collaboration opportunities. Reach out to our team for advertising, events, or general questions. We're here to help!",
-  keywords: ["contact", "get in touch", "inquiries", "feedback", "advertising", "events", "collaboration"],
+  title: `Contact Us - Get in Touch with ${SITE_NAME}`,
+  description: `Contact ${SITE_NAME} for inquiries, feedback, or collaboration opportunities. Reach out to our team for advertising, events, or general questions. We're here to help!`,
+  keywords: ["contact", "get in touch", "inquiries", "feedback", "advertising", "events", "collaboration", SITE_NAME],
   alternates: {
-    canonical: '/contact',
+    canonical: "/contact",
   },
   openGraph: {
-    title: "Contact Us - Get in Touch with NewsBoard",
-    description: "Contact NewsBoard for inquiries, feedback, or collaboration opportunities. We're here to help!",
-    url: 'https://newsboard.com/contact',
-    siteName: 'NewsBoard',
-    type: 'website',
+    title: `Contact Us - Get in Touch with ${SITE_NAME}`,
+    description: `Contact ${SITE_NAME} for inquiries, feedback, or collaboration opportunities. We're here to help!`,
+    url: `${SITE_URL}/contact`,
+    siteName: SITE_NAME,
+    type: "website",
   },
   twitter: {
-    card: 'summary',
-    title: "Contact Us - Get in Touch with NewsBoard",
-    description: "Contact NewsBoard for inquiries, feedback, or collaboration opportunities.",
+    card: "summary",
+    title: `Contact Us - Get in Touch with ${SITE_NAME}`,
+    description: `Contact ${SITE_NAME} for inquiries, feedback, or collaboration opportunities.`,
   },
   robots: {
     index: true,

@@ -1,19 +1,23 @@
 import { Metadata } from 'next';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
 
 // Utility function to generate structured data (JSON-LD)
 export function generateStructuredData(type: 'article' | 'author' | 'organization' | 'website', data: any) {
-    const baseUrl = 'https://newsboard.com';
+    const baseUrl = SITE_URL;
 
     switch (type) {
-        case 'article':
-            // Handle both complete article object and individual props
+        case 'article': {
             const title = data.title;
             const excerpt = data.description || data.excerpt || (data.content ? data.content.substring(0, 160) : '');
             const image = data.image || data.featuredImage || `${baseUrl}/assets/imgs/news/news-1.jpg`;
             const author = data.author;
             const publishedAt = data.publishedTime || data.publishedAt;
             const updatedAt = data.modifiedTime || data.updatedAt || publishedAt;
-            const slug = data.url ? data.url.replace(`${baseUrl}/`, '') : data.slug;
+            const articlePath = data.url
+                ? String(data.url).replace(baseUrl, '').replace(/^\//, '')
+                : data.slug
+                  ? String(data.slug).replace(/^\//, '')
+                  : '';
             const category = data.category;
             const tags = data.tags || [];
 
@@ -31,25 +35,26 @@ export function generateStructuredData(type: 'article' | 'author' | 'organizatio
                 author: {
                     '@type': 'Person',
                     name: author.name,
-                    url: `${baseUrl}/author/${author.slug}`,
+                    url: `${baseUrl}/author/${author.slug || ''}`,
                 },
                 publisher: {
                     '@type': 'Organization',
-                    name: 'NewsBoard',
+                    name: SITE_NAME,
                     logo: {
                         '@type': 'ImageObject',
-                        url: `${baseUrl}/assets/imgs/theme/favicon.png`,
+                        url: `${baseUrl}/assets/imgs/theme/favicon.svg`,
                     },
                 },
                 datePublished: publishedAt,
                 dateModified: updatedAt,
                 mainEntityOfPage: {
                     '@type': 'WebPage',
-                    '@id': `${baseUrl}/${slug}`,
+                    '@id': `${baseUrl}/${articlePath}`,
                 },
                 articleSection: category?.name || 'General',
                 keywords: Array.isArray(tags) ? tags.map((tag: any) => typeof tag === 'string' ? tag : tag.name).join(', ') : '',
             };
+        }
 
         case 'author':
             return {
@@ -62,7 +67,7 @@ export function generateStructuredData(type: 'article' | 'author' | 'organizatio
                 jobTitle: 'Journalist',
                 worksFor: {
                     '@type': 'Organization',
-                    name: 'NewsBoard',
+                    name: SITE_NAME,
                 },
                 sameAs: data.socialLinks ? Object.values(data.socialLinks).filter(Boolean) : [],
             };
@@ -71,13 +76,13 @@ export function generateStructuredData(type: 'article' | 'author' | 'organizatio
             return {
                 '@context': 'https://schema.org',
                 '@type': 'NewsMediaOrganization',
-                name: 'NewsBoard',
+                name: SITE_NAME,
                 url: baseUrl,
                 logo: {
                     '@type': 'ImageObject',
-                    url: `${baseUrl}/assets/imgs/theme/favicon.png`,
+                    url: `${baseUrl}/assets/imgs/theme/favicon.svg`,
                 },
-                description: 'Latest news, breaking stories, and in-depth analysis from trusted journalists.',
+                description: SITE_DESCRIPTION,
                 foundingDate: '2024',
                 areaServed: 'Worldwide',
                 hasCredential: true,
@@ -90,15 +95,15 @@ export function generateStructuredData(type: 'article' | 'author' | 'organizatio
             return {
                 '@context': 'https://schema.org',
                 '@type': 'WebSite',
-                name: 'NewsBoard',
+                name: SITE_NAME,
                 url: baseUrl,
-                description: 'Latest news, breaking stories, and in-depth analysis from trusted journalists.',
+                description: SITE_DESCRIPTION,
                 publisher: {
                     '@type': 'Organization',
-                    name: 'NewsBoard',
+                    name: SITE_NAME,
                     logo: {
                         '@type': 'ImageObject',
-                        url: `${baseUrl}/assets/imgs/theme/favicon.png`,
+                        url: `${baseUrl}/assets/imgs/theme/favicon.svg`,
                     },
                 },
                 potentialAction: {
@@ -118,21 +123,35 @@ export function generateStructuredData(type: 'article' | 'author' | 'organizatio
 
 // Utility function to generate article metadata
 export function generateArticleMetadata(article: any): Metadata {
-    const baseUrl = 'https://newsboard.com';
+    const baseUrl = SITE_URL;
     const publishedDate = new Date(article.publishedAt).toISOString();
     const authorName = article.author.name;
     const categoryName = article.category.name;
+    const categorySlug = article.category.slug;
+    const articleSlug = String(article.slug || '').replace(/^\//, '').split('/').pop();
+    const path = `/${categorySlug}/${articleSlug}`;
+    const title = article.seo?.title || article.title;
+    const description =
+        article.seo?.description ||
+        article.excerpt ||
+        article.description ||
+        (article.content ? String(article.content).substring(0, 160) : '');
+    const keywords = article.seo?.keywords?.length
+        ? article.seo.keywords
+        : [categoryName, authorName, 'news', 'article', SITE_NAME, ...(article.tags?.map((tag: any) => typeof tag === 'string' ? tag : tag.name) || [])];
 
     return {
-        title: article.title,
-        description: article.excerpt || article.content.substring(0, 160),
-        keywords: [categoryName, authorName, 'news', 'article', ...(article.tags?.map((tag: any) => tag.name) || [])],
+        title,
+        description,
+        keywords,
         authors: [{ name: authorName }],
         category: categoryName,
         openGraph: {
-            title: article.title,
-            description: article.excerpt || article.content.substring(0, 160),
+            title,
+            description,
             type: 'article',
+            url: `${baseUrl}${path}`,
+            siteName: SITE_NAME,
             publishedTime: publishedDate,
             authors: [authorName],
             section: categoryName,
@@ -141,19 +160,19 @@ export function generateArticleMetadata(article: any): Metadata {
                     url: article.featuredImage || `${baseUrl}/assets/imgs/news/news-1.jpg`,
                     width: 1200,
                     height: 630,
-                    alt: article.title,
+                    alt: title,
                 },
             ],
         },
         twitter: {
             card: 'summary_large_image',
-            title: article.title,
-            description: article.excerpt || article.content.substring(0, 160),
+            title,
+            description,
             images: [article.featuredImage || `${baseUrl}/assets/imgs/news/news-1.jpg`],
             creator: `@${authorName.toLowerCase().replace(/\s+/g, '')}`,
         },
         alternates: {
-            canonical: `/single/${article.slug}`,
+            canonical: path,
         },
         robots: {
             index: true,
@@ -176,13 +195,13 @@ export function generateArticleMetadata(article: any): Metadata {
 
 // Utility function to generate category metadata
 export function generateCategoryMetadata(category: any, articles: any[] = []): Metadata {
-    const baseUrl = 'https://newsboard.com';
+    const baseUrl = SITE_URL;
     const articleCount = articles.length;
 
     return {
         title: `${category.name} News - Latest ${category.name} Stories`,
-        description: `Stay updated with the latest ${category.name.toLowerCase()} news, breaking stories, and in-depth analysis. Read ${articleCount} articles about ${category.name.toLowerCase()} on NewsBoard.`,
-        keywords: [category.name, 'news', 'articles', 'stories', 'analysis', category.name.toLowerCase()],
+        description: `Stay updated with the latest ${category.name.toLowerCase()} news, breaking stories, and in-depth analysis. Read ${articleCount} articles about ${category.name.toLowerCase()} on ${SITE_NAME}.`,
+        keywords: [category.name, 'news', 'articles', 'stories', 'analysis', category.name.toLowerCase(), SITE_NAME],
         alternates: {
             canonical: `/category/${category.slug}`,
         },
@@ -190,7 +209,7 @@ export function generateCategoryMetadata(category: any, articles: any[] = []): M
             title: `${category.name} News - Latest ${category.name} Stories`,
             description: `Stay updated with the latest ${category.name.toLowerCase()} news, breaking stories, and in-depth analysis.`,
             url: `${baseUrl}/category/${category.slug}`,
-            siteName: 'NewsBoard',
+            siteName: SITE_NAME,
             type: 'website',
             images: [
                 {
@@ -223,14 +242,14 @@ export function generateCategoryMetadata(category: any, articles: any[] = []): M
 
 // Utility function to generate author metadata
 export function generateAuthorMetadata(author: any, articles: any[] = []): Metadata {
-    const baseUrl = 'https://newsboard.com';
+    const baseUrl = SITE_URL;
     const articleCount = articles.length;
     const bio = author.bio || `Read articles by ${author.name}`;
 
     return {
         title: `${author.name} - Author Profile and Articles`,
-        description: `${bio} Discover ${articleCount} articles written by ${author.name} on NewsBoard. Expert analysis and insightful reporting.`,
-        keywords: [author.name, 'author', 'journalist', 'reporter', 'articles', 'news', 'analysis'],
+        description: `${bio} Discover ${articleCount} articles written by ${author.name} on ${SITE_NAME}. Expert analysis and insightful reporting.`,
+        keywords: [author.name, 'author', 'journalist', 'reporter', 'articles', 'news', 'analysis', SITE_NAME],
         authors: [{ name: author.name }],
         alternates: {
             canonical: `/author/${author.slug}`,
@@ -239,7 +258,7 @@ export function generateAuthorMetadata(author: any, articles: any[] = []): Metad
             title: `${author.name} - Author Profile and Articles`,
             description: `${bio} Discover ${articleCount} articles written by ${author.name}.`,
             url: `${baseUrl}/author/${author.slug}`,
-            siteName: 'NewsBoard',
+            siteName: SITE_NAME,
             type: 'profile',
             images: [
                 {
@@ -268,4 +287,4 @@ export function generateAuthorMetadata(author: any, articles: any[] = []): Metad
             },
         },
     };
-} 
+}

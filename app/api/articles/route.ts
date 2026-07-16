@@ -241,14 +241,6 @@ export async function GET(request: NextRequest) {
                     : dateA.getTime() - dateB.getTime();
             });
         } else if (sort === "views") {
-            // Mock views data
-            filteredArticles = filteredArticles.map(
-                (article) =>
-                    ({
-                        ...article,
-                        views: Math.floor(Math.random() * 1000) + 100,
-                    }) as any,
-            );
             filteredArticles.sort((a: any, b: any) => {
                 return order === "desc"
                     ? (b.views || 0) - (a.views || 0)

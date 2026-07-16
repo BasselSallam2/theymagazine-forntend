@@ -2,22 +2,28 @@ import Section1 from "@/components/sections/single/Section1";
 import Section2 from "@/components/sections/single/Section2";
 import Section3 from "@/components/sections/single/Section3";
 import StructuredData from "@/components/StructuredData";
+import AnalyticsBeacon from "@/components/elements/AnalyticsBeacon";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
-
-
+const INTERNAL_SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+  "http://localhost:3000";
 
 // Fetch article data from API
 async function getArticle(category: string, slug: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles/${category}/${slug}`, {
-      cache: 'no-store', // Disable caching for fresh data
-    });
+    const response = await fetch(
+      `${INTERNAL_SITE_URL}/api/articles/${category}/${slug}`,
+      {
+        cache: "no-store",
+      },
+    );
 
     if (!response.ok) {
       if (response.status === 404) {
-        return null; // Article not found
+        return null;
       }
       throw new Error(`API error: ${response.status}`);
     }
@@ -34,17 +40,16 @@ async function getArticle(category: string, slug: string) {
       return null;
     }
 
-    // Data is already transformed by the API route, just add computed fields
     return {
       ...article,
-      readTime: Math.ceil((article.content || '').split(' ').length / 200), // Estimate read time
+      readTime: Math.ceil((article.content || "").split(" ").length / 200),
       author: {
         ...article.author,
-        avatar: '/assets/imgs/authors/default.jpg', // Default avatar
+        avatar: "/assets/imgs/authors/default.jpg",
       },
     };
   } catch (error) {
-    console.error('Error fetching article:', error);
+    console.error("Error fetching article:", error);
     return null;
   }
 }
@@ -52,32 +57,32 @@ async function getArticle(category: string, slug: string) {
 // Fetch related articles (optionally exclude current article by its full path slug)
 async function getRelatedArticles(excludeSlug?: string) {
   try {
-    const url = new URL(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles`);
-    url.searchParams.set('related', 'true');
-    if (excludeSlug) url.searchParams.set('excludeSlug', excludeSlug);
+    const url = new URL(`${INTERNAL_SITE_URL}/api/articles`);
+    url.searchParams.set("related", "true");
+    if (excludeSlug) url.searchParams.set("excludeSlug", excludeSlug);
 
     const response = await fetch(url.toString(), {
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     if (!response.ok) {
-      console.error('Failed to fetch related articles');
+      console.error("Failed to fetch related articles");
       return [];
     }
 
     const data = await response.json();
     return data.success ? data.data : [];
   } catch (error) {
-    console.error('Error fetching related articles:', error);
+    console.error("Error fetching related articles:", error);
     return [];
   }
 }
 
 // Generate metadata for article pages
 export async function generateMetadata({
-  params
+  params,
 }: {
-  params: Promise<{ category: string; slug: string }>
+  params: Promise<{ category: string; slug: string }>;
 }): Promise<Metadata> {
   try {
     const { category, slug } = await params;
@@ -90,26 +95,49 @@ export async function generateMetadata({
       };
     }
 
+    const path = `/${category}/${slug}`;
+    const title = article.seo?.title || article.title;
+    const description =
+      article.seo?.description ||
+      article.excerpt ||
+      (article.content ? String(article.content).replace(/<[^>]+>/g, "").substring(0, 160) : "");
+    const keywords = article.seo?.keywords?.length
+      ? article.seo.keywords
+      : Array.isArray(article.tags)
+        ? article.tags.map((t: any) => (typeof t === "string" ? t : t.name))
+        : [];
+
     return {
-      title: article.title,
-      description: article.excerpt || article.content.substring(0, 160),
-      keywords: article.tags?.join(', '),
+      title,
+      description,
+      keywords,
       authors: [{ name: article.author.name }],
+      alternates: {
+        canonical: path,
+      },
       openGraph: {
-        title: article.title,
-        description: article.excerpt || article.content.substring(0, 160),
-        images: article.featuredImage ? [{ url: article.featuredImage, alt: article.title }] : [],
-        type: 'article',
+        title,
+        description,
+        url: `${SITE_URL}${path}`,
+        siteName: SITE_NAME,
+        images: article.featuredImage
+          ? [{ url: article.featuredImage, alt: title }]
+          : [],
+        type: "article",
         publishedTime: article.publishedAt,
         modifiedTime: article.updatedAt,
         authors: [article.author.name],
-        tags: article.tags,
+        tags: keywords,
       },
       twitter: {
-        card: 'summary_large_image',
-        title: article.title,
-        description: article.excerpt || article.content.substring(0, 160),
+        card: "summary_large_image",
+        title,
+        description,
         images: article.featuredImage ? [article.featuredImage] : [],
+      },
+      robots: {
+        index: true,
+        follow: true,
       },
     };
   } catch (error) {
@@ -121,9 +149,9 @@ export async function generateMetadata({
 }
 
 export default async function ArticlePage({
-  params
+  params,
 }: {
-  params: Promise<{ category: string; slug: string }>
+  params: Promise<{ category: string; slug: string }>;
 }) {
   try {
     const { category, slug } = await params;
@@ -133,47 +161,59 @@ export default async function ArticlePage({
       notFound();
     }
 
-    // Transform tags to match expected format (non-functional)
     const transformedTags = Array.isArray(article.tags)
       ? article.tags.map((tag: any, index: number) => ({
-          id: typeof tag === 'string' ? index : tag.id || index,
-          name: typeof tag === 'string' ? tag : tag.name || tag,
-          slug: '', // Empty slug to make tags non-functional
+          id: typeof tag === "string" ? index : tag.id || index,
+          name: typeof tag === "string" ? tag : tag.name || tag,
+          slug: "",
         }))
       : [];
 
-    // Fetch related articles (exclude current article)
     const relatedArticles = await getRelatedArticles(article.slug);
+    const articlePath = `/${category}/${slug}`;
 
     return (
       <>
+        <AnalyticsBeacon
+          type="article_view"
+          path={articlePath}
+          postId={article.id}
+        />
         <StructuredData
           type="article"
-          title={article.title}
-          description={article.excerpt || article.content.substring(0, 160)}
+          title={article.seo?.title || article.title}
+          description={
+            article.seo?.description ||
+            article.excerpt ||
+            (article.content
+              ? String(article.content).replace(/<[^>]+>/g, "").substring(0, 160)
+              : "")
+          }
           image={article.featuredImage}
-          url={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${article.slug}`}
+          url={`${SITE_URL}${articlePath}`}
           publishedTime={article.publishedAt}
           modifiedTime={article.updatedAt}
           author={article.author}
           category={article.category}
+          tags={article.tags}
+          slug={`${category}/${slug}`}
         />
         <Section1 article={article} author={article.author} />
         <Section2 article={article} />
         <Section3
-            article={article}
-            author={article.author}
-            tags={transformedTags}
-            comments={[]}
-            relatedArticles={relatedArticles}
-            showNewsletter={false}
-            showComments={false}
-            showRelated={true}
+          article={article}
+          author={article.author}
+          tags={transformedTags}
+          comments={[]}
+          relatedArticles={relatedArticles}
+          showNewsletter={false}
+          showComments={false}
+          showRelated={true}
         />
       </>
     );
   } catch (error) {
-    console.error('Error loading article page:', error);
+    console.error("Error loading article page:", error);
     notFound();
   }
 }
