@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { ArticleListSectionProps, Article, Category } from "@/types";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { getRecentArticlesClient } from "@/lib/data";
 import React from "react";
 
@@ -135,14 +136,94 @@ function categoryPageHref(slug: string, page: number) {
   return `/category/${slug}?page=${page}`;
 }
 
+function preloadImage(src: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!src) {
+      resolve();
+      return;
+    }
+    const img = new window.Image();
+    const done = () => resolve();
+    img.onload = done;
+    img.onerror = done;
+    img.src = src;
+  });
+}
+
+async function preloadArticleImages(articles: Article[]): Promise<void> {
+  const urls = articles
+    .map((article) => {
+      const featured = article.featuredImage;
+      if (featured) return featured;
+      const videoId = getYouTubeId(article.content || "");
+      return videoId ? getYouTubeThumbnail(videoId) : null;
+    })
+    .filter((url): url is string => Boolean(url));
+
+  const unique = [...new Set(urls)];
+  const timeout = new Promise<void>((resolve) => setTimeout(resolve, 8000));
+  await Promise.race([
+    Promise.allSettled(unique.map(preloadImage)).then(() => undefined),
+    timeout,
+  ]);
+}
+
+function CategoryPageLoadingScreen({ isArabic }: { isArabic?: boolean }) {
+  return (
+    <div
+      className="d-flex flex-column align-items-center justify-content-center py-5 my-4"
+      style={{ minHeight: "420px" }}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div
+        className="spinner-border text-primary mb-3"
+        style={{ width: "3rem", height: "3rem" }}
+        aria-hidden="true"
+      />
+      <p className="text-muted mb-0" style={{ fontSize: "1rem" }}>
+        {isArabic
+          ? "جاري تحميل المقالات والصور..."
+          : "Loading articles and images..."}
+      </p>
+      <div className="w-100 mt-4 px-3" style={{ maxWidth: 720 }}>
+        <div className="row g-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="col-md-4">
+              <div
+                className="rounded category-page-shimmer"
+                style={{ height: 140 }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <style>{`
+        .category-page-shimmer {
+          background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+          background-size: 200% 100%;
+          animation: categoryShimmer 1.2s ease-in-out infinite;
+        }
+        @keyframes categoryShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function CategoryPagination({
-  slug,
   pagination,
   ariaLabel,
+  onNavigate,
+  disabled = false,
 }: {
-  slug: string;
   pagination: NonNullable<CategoryArticlesProps["pagination"]>;
   ariaLabel: string;
+  onNavigate: (page: number) => void;
+  disabled?: boolean;
 }) {
   const { currentPage, totalPages, hasPrev, hasNext, prevPage, nextPage } =
     pagination;
@@ -151,60 +232,68 @@ function CategoryPagination({
 
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
+  const pageButton = (
+    page: number,
+    label: React.ReactNode,
+    opts?: { ariaLabel?: string; disabled?: boolean },
+  ) => {
+    const isDisabled = Boolean(opts?.disabled || disabled);
+    if (isDisabled) {
+      return (
+        <span
+          className="page-link"
+          aria-hidden={!opts?.ariaLabel}
+          aria-label={opts?.ariaLabel}
+        >
+          {label}
+        </span>
+      );
+    }
+    return (
+      <button
+        type="button"
+        className="page-link"
+        aria-label={opts?.ariaLabel}
+        onClick={() => onNavigate(page)}
+        style={{ cursor: "pointer", border: "none", background: "transparent" }}
+      >
+        {label}
+      </button>
+    );
+  };
+
   return (
     <div className="d-flex justify-content-center mt-4">
       <nav aria-label={ariaLabel}>
         <ul className="pagination">
-          <li className={`page-item ${!hasPrev ? "disabled" : ""}`}>
-            {hasPrev && prevPage ? (
-              <Link
-                className="page-link"
-                href={categoryPageHref(slug, prevPage)}
-                aria-label="Previous"
-                scroll
-              >
-                <span aria-hidden="true">&laquo;</span>
-              </Link>
-            ) : (
-              <span className="page-link" aria-hidden="true">
-                &laquo;
-              </span>
-            )}
+          <li className={`page-item ${!hasPrev || disabled ? "disabled" : ""}`}>
+            {pageButton(prevPage || 1, <span aria-hidden="true">&laquo;</span>, {
+              ariaLabel: "Previous",
+              disabled: !hasPrev || !prevPage,
+            })}
           </li>
           {pages.map((page) => (
             <li
               key={page}
-              className={`page-item ${page === currentPage ? "active" : ""}`}
+              className={`page-item ${page === currentPage ? "active" : ""} ${disabled ? "disabled" : ""}`}
             >
               {page === currentPage ? (
                 <span className="page-link" aria-current="page">
                   {page}
                 </span>
               ) : (
-                <Link
-                  className="page-link"
-                  href={categoryPageHref(slug, page)}
-                  scroll
-                >
-                  {page}
-                </Link>
+                pageButton(page, page)
               )}
             </li>
           ))}
-          <li className={`page-item ${!hasNext ? "disabled" : ""}`}>
-            {hasNext && nextPage ? (
-              <Link
-                className="page-link"
-                href={categoryPageHref(slug, nextPage)}
-                aria-label="Next"
-                scroll
-              >
-                <span aria-hidden="true">&raquo;</span>
-              </Link>
-            ) : (
-              <span className="page-link" aria-hidden="true">
-                &raquo;
-              </span>
+          <li className={`page-item ${!hasNext || disabled ? "disabled" : ""}`}>
+            {pageButton(
+              nextPage || totalPages,
+              <span aria-hidden="true">&raquo;</span>,
+              {
+                ariaLabel: "Next",
+                disabled: !hasNext || !nextPage,
+              },
             )}
           </li>
         </ul>
@@ -218,12 +307,16 @@ const ReelsGrid = ({
   articles,
   showPagination,
   pagination,
-  categorySlug,
+  onNavigate,
+  isLoading,
+  isArabic,
 }: {
   articles: Article[];
   showPagination: boolean;
   pagination?: CategoryArticlesProps["pagination"];
-  categorySlug: string;
+  onNavigate: (page: number) => void;
+  isLoading: boolean;
+  isArabic?: boolean;
 }) => {
   const [selectedVideo, setSelectedVideo] = useState<{url: string; title: string} | null>(null);
 
@@ -243,6 +336,22 @@ const ReelsGrid = ({
     cursor: 'pointer',
     overflow: 'hidden',
   };
+
+  if (isLoading) {
+    return (
+      <>
+        <CategoryPageLoadingScreen isArabic={isArabic} />
+        {showPagination && pagination && (
+          <CategoryPagination
+            pagination={pagination}
+            onNavigate={onNavigate}
+            disabled
+            ariaLabel="Reels pagination"
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>
@@ -336,8 +445,8 @@ const ReelsGrid = ({
       {/* Pagination */}
       {showPagination && pagination && (
         <CategoryPagination
-          slug={categorySlug}
           pagination={pagination}
+          onNavigate={onNavigate}
           ariaLabel="Reels pagination"
         />
       )}
@@ -355,6 +464,51 @@ const ReelsGrid = ({
 export default function Section2({ articles = [], category, title = "Latest Articles", variant = "grid", columns = 3, showPagination = true, pagination = null, showLoadMore = false, itemsPerPage = 12, showCategories = true, showAuthor = true, showDate = true, showExcerpt = true, showReadTime = true, showViews = true, showLikes = true, className, isArabic = false }: CategoryArticlesProps = {}) {
   const [recentArticles, setRecentArticles] = useState<Article[]>([]);
   const isReels = category?.slug === 'reels';
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [pendingPage, setPendingPage] = useState<number | null>(null);
+  const currentPage = pagination?.currentPage ?? 1;
+  const categorySlug = category?.slug || "";
+
+  const isPageLoading = pendingPage !== null;
+
+  const navigateToPage = useCallback(
+    (page: number) => {
+      if (!categorySlug || page === currentPage || pendingPage !== null) return;
+      setPendingPage(page);
+      startTransition(() => {
+        router.push(categoryPageHref(categorySlug, page));
+      });
+    },
+    [categorySlug, currentPage, pendingPage, router],
+  );
+
+  useEffect(() => {
+    if (pendingPage === null) return;
+    if (isPending) return;
+    if (currentPage !== pendingPage) return;
+
+    let cancelled = false;
+
+    preloadArticleImages(articles).finally(() => {
+      if (cancelled) return;
+      setPendingPage(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [articles, currentPage, isPending, pendingPage]);
+
+  // Safety: clear stuck loading if navigation never completes
+  useEffect(() => {
+    if (pendingPage === null) return;
+    const timer = window.setTimeout(() => {
+      setPendingPage(null);
+    }, 15000);
+    return () => window.clearTimeout(timer);
+  }, [pendingPage]);
 
   useEffect(() => {
     if (!category || isReels) {
@@ -408,7 +562,9 @@ export default function Section2({ articles = [], category, title = "Latest Arti
           articles={articles}
           showPagination={showPagination}
           pagination={pagination}
-          categorySlug={category?.slug || "reels"}
+          onNavigate={navigateToPage}
+          isLoading={isPageLoading}
+          isArabic={isArabic}
         />
       </section>
     );
@@ -422,6 +578,21 @@ export default function Section2({ articles = [], category, title = "Latest Arti
           <span className="line-dots mb-10" />
           <span className="pl-15 pr-15 bg-white font-family-normal">{title}</span>
         </h3>
+
+        {isPageLoading ? (
+          <>
+            <CategoryPageLoadingScreen isArabic={isArabic} />
+            {showPagination && pagination && category?.slug && (
+              <CategoryPagination
+                pagination={pagination}
+                onNavigate={navigateToPage}
+                disabled
+                ariaLabel="Category pagination"
+              />
+            )}
+          </>
+        ) : (
+        <>
         {/* Modern Newsletter-Style Article Layout */}
         <div className="newsletter-articles-layout" style={{
           // Add some basic styles
@@ -659,10 +830,12 @@ export default function Section2({ articles = [], category, title = "Latest Arti
         {/* Pagination */}
         {showPagination && pagination && category?.slug && (
           <CategoryPagination
-            slug={category.slug}
             pagination={pagination}
+            onNavigate={navigateToPage}
             ariaLabel="Category pagination"
           />
+        )}
+        </>
         )}
       </section>
     </>
